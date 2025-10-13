@@ -27,6 +27,8 @@ public class PretrainedModelService implements IPretrainedModelService {
 
     private static final Logger logger = LoggerFactory.getLogger(PretrainedModelService.class);
 
+    private static final String PRETRAINED_DIR = "pretrained";
+
     @Autowired
     private PretrainedModelRepository modelRepository;
 
@@ -53,8 +55,8 @@ public class PretrainedModelService implements IPretrainedModelService {
         }
 
         try {
-            // 创建存储目录
-            Path uploadDir = Paths.get(uploadPath, modelPartition);
+            // 创建存储目录: uploadPath/pretrained/modelPartition
+            Path uploadDir = Paths.get(uploadPath, PRETRAINED_DIR, modelPartition);
             if (!Files.exists(uploadDir)) {
                 Files.createDirectories(uploadDir);
                 logger.info("创建目录: {}", uploadDir);
