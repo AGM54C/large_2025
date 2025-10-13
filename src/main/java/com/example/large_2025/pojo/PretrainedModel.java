@@ -24,7 +24,5 @@ public class PretrainedModel {
      */
     @Column(name = "model_partition", nullable = false, length = 50)
     private String modelPartition;
-
-
 }
 
