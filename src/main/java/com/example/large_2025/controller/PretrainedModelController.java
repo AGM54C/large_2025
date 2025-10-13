@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,13 +26,15 @@ public class PretrainedModelController {
     private IPretrainedModelService modelService;
 
     /**
-     * 上传模型文件
+     * 上传模型文件 (使用 multipart/form-data)
      * POST /api/models/upload
+     * Content-Type: multipart/form-data
+     *
      * @param modelName 模型名称
      * @param modelPartition 模型分区
      * @param file 上传的文件
      */
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> uploadModel(
             @RequestParam("modelName") String modelName,
             @RequestParam("modelPartition") String modelPartition,
@@ -40,8 +43,15 @@ public class PretrainedModelController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            logger.info("收到上传请求 - 模型名称: {}, 分区: {}, 文件: {}",
-                    modelName, modelPartition, file.getOriginalFilename());
+            // 验证文件是否为空
+            if (file.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "上传文件不能为空");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            logger.info("收到上传请求 - 模型名称: {}, 分区: {}, 文件: {}, 大小: {} bytes",
+                    modelName, modelPartition, file.getOriginalFilename(), file.getSize());
 
             PretrainedModelDto dto = modelService.uploadModel(modelName, modelPartition, file);
 
