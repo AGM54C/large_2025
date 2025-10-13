@@ -1,9 +1,9 @@
 package com.example.large_2025.pojo;
 
-import java.util.Date;
-import java.util.List;
 import jakarta.persistence.*;
 
+@Entity
+@Table(name = "tab_dataset")
 public class Dataset {
     /**
      * 数据集ID，自增主键
@@ -37,7 +37,24 @@ public class Dataset {
     @Column(name = "update_timestamp", nullable = false)
     private Long updateTimestamp;
 
-    //JPA回调方法，在实体被更新时自动设置更新时间戳
+    // 无参构造函数（JPA要求）
+    public Dataset() {
+    }
+
+    // 有参构造函数（方便使用）
+    public Dataset(String datasetCategory, String datasetName, String datasetFilePath) {
+        this.datasetCategory = datasetCategory;
+        this.datasetName = datasetName;
+        this.datasetFilePath = datasetFilePath;
+    }
+
+    // JPA回调方法，在实体被持久化之前自动设置时间戳
+    @PrePersist  // ✓ 新增：插入时也要设置时间戳
+    public void prePersist() {
+        this.updateTimestamp = System.currentTimeMillis();
+    }
+
+    // JPA回调方法，在实体被更新时自动设置更新时间戳
     @PreUpdate
     public void preUpdate() {
         this.updateTimestamp = System.currentTimeMillis();
@@ -70,6 +87,9 @@ public class Dataset {
     }
     public Long getUpdateTimestamp() {
         return updateTimestamp;
+    }
+    public void setUpdateTimestamp(Long updateTimestamp) {
+        this.updateTimestamp = updateTimestamp;
     }
 
     @Override
