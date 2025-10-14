@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/models")
-@CrossOrigin(origins = "*")
 public class PretrainedModelController {
 
     private static final Logger logger = LoggerFactory.getLogger(PretrainedModelController.class);
@@ -176,6 +175,33 @@ public class PretrainedModelController {
     }
 
     /**
+     * 搜索模型（支持模糊查询）
+     * GET /api/models/search?keyword={keyword}&limit={limit}
+     */
+    @GetMapping("/search")
+    public ResponseEntity<Map<String, Object>> searchModels(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "limit", defaultValue = "10") int limit) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<PretrainedModelDto> dtoList = modelService.searchModels(keyword, limit);
+
+            response.put("success", true);
+            response.put("data", dtoList);
+            response.put("count", dtoList.size());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("搜索模型失败", e);
+            response.put("success", false);
+            response.put("message", "搜索失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
      * 删除模型（根据ID）
      * DELETE /api/models/{id}
      */
@@ -234,6 +260,45 @@ public class PretrainedModelController {
     }
 
     /**
+     * 批量删除模型
+     * DELETE /api/models/batch
+     * Request Body: {"modelIds": [1, 2, 3]}
+     */
+    @DeleteMapping("/batch")
+    public ResponseEntity<Map<String, Object>> batchDeleteModels(@RequestBody Map<String, List<Integer>> request) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<Integer> modelIds = request.get("modelIds");
+
+            if (modelIds == null || modelIds.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "模型ID列表不能为空");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            boolean deleted = modelService.batchDeleteModels(modelIds);
+
+            if (deleted) {
+                response.put("success", true);
+                response.put("message", "批量删除成功");
+                response.put("deletedCount", modelIds.size());
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "批量删除失败");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+
+        } catch (Exception e) {
+            logger.error("批量删除模型失败", e);
+            response.put("success", false);
+            response.put("message", "批量删除失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
      * 更新模型信息
      * PUT /api/models/{id}
      */
@@ -256,6 +321,53 @@ public class PretrainedModelController {
             logger.error("更新模型失败", e);
             response.put("success", false);
             response.put("message", "更新失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 统计模型总数
+     * GET /api/models/count
+     */
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Object>> countModels() {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            int count = modelService.countModels();
+
+            response.put("success", true);
+            response.put("count", count);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("统计模型总数失败", e);
+            response.put("success", false);
+            response.put("message", "统计失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 统计指定分区的模型数量
+     * GET /api/models/count/partition/{partition}
+     */
+    @GetMapping("/count/partition/{partition}")
+    public ResponseEntity<Map<String, Object>> countByPartition(@PathVariable("partition") String partition) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            int count = modelService.countByPartition(partition);
+
+            response.put("success", true);
+            response.put("partition", partition);
+            response.put("count", count);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("统计分区模型数量失败", e);
+            response.put("success", false);
+            response.put("message", "统计失败: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

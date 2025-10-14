@@ -64,4 +64,32 @@ public interface IPretrainedModelService {
      * @return 更新后的模型信息
      */
     PretrainedModelDto updateModel(Integer modelId, PretrainedModelDto dto);
+
+    /**
+     * 搜索模型
+     * @param keyword 搜索关键词
+     * @param limit 返回结果数量限制
+     * @return 模型列表
+     */
+    List<PretrainedModelDto> searchModels(String keyword, int limit);
+
+    /**
+     * 批量删除模型
+     * @param modelIds 模型ID列表
+     * @return 是否删除成功
+     */
+    boolean batchDeleteModels(List<Integer> modelIds);
+
+    /**
+     * 统计模型总数
+     * @return 模型总数
+     */
+    int countModels();
+
+    /**
+     * 统计指定分区的模型数量
+     * @param partition 分区名称
+     * @return 模型数量
+     */
+    int countByPartition(String partition);
 }

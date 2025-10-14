@@ -3,8 +3,8 @@ package com.example.large_2025.service.impl;
 import com.example.large_2025.pojo.dto.PretrainedModelDto;
 import com.example.large_2025.mapper.PretrainedModelMapper;
 import com.example.large_2025.pojo.PretrainedModel;
-import com.example.large_2025.repository.PretrainedModelRepository;
 import com.example.large_2025.service.IPretrainedModelService;
+import com.example.large_2025.util.ConvertUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +13,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class PretrainedModelService implements IPretrainedModelService {
@@ -30,10 +27,10 @@ public class PretrainedModelService implements IPretrainedModelService {
     private static final String PRETRAINED_DIR = "pretrained";
 
     @Autowired
-    private PretrainedModelRepository modelRepository;
+    private PretrainedModelMapper modelMapper;
 
     @Autowired
-    private PretrainedModelMapper modelMapper;
+    private ConvertUtil convertUtil;
 
     @Value("${file.upload.path}")
     private String uploadPath;
@@ -44,7 +41,7 @@ public class PretrainedModelService implements IPretrainedModelService {
         logger.info("开始上传模型: {}, 分区: {}, 文件名: {}", modelName, modelPartition, file.getOriginalFilename());
 
         // 检查模型名称是否已存在
-        PretrainedModel existingModel = modelRepository.findByModelName(modelName);
+        PretrainedModel existingModel = modelMapper.findByModelName(modelName);
         if (existingModel != null) {
             throw new RuntimeException("模型名称已存在: " + modelName);
         }
@@ -85,10 +82,10 @@ public class PretrainedModelService implements IPretrainedModelService {
             model.setModelPartition(modelPartition);
             model.setModelFilePath(filePath.toString());
 
-            PretrainedModel savedModel = modelRepository.save(model);
-            logger.info("数据库记录保存成功: {}", savedModel);
+            modelMapper.add(model);
+            logger.info("数据库记录保存成功，模型ID: {}", model.getModelId());
 
-            return modelMapper.entityToDto(savedModel);
+            return convertUtil.toDto(model);
 
         } catch (IOException e) {
             logger.error("文件上传失败", e);
@@ -99,34 +96,29 @@ public class PretrainedModelService implements IPretrainedModelService {
     @Override
     public PretrainedModelDto findById(Integer modelId) {
         logger.info("查找模型ID: {}", modelId);
-        Optional<PretrainedModel> model = modelRepository.findById(modelId);
-        return model.map(modelMapper::entityToDto).orElse(null);
+        PretrainedModel model = modelMapper.findById(modelId);
+        return convertUtil.toDto(model);
     }
 
     @Override
     public PretrainedModelDto findByModelName(String modelName) {
         logger.info("查找模型名称: {}", modelName);
-        PretrainedModel model = modelRepository.findByModelName(modelName);
-        return modelMapper.entityToDto(model);
+        PretrainedModel model = modelMapper.findByModelName(modelName);
+        return convertUtil.toDto(model);
     }
 
     @Override
     public List<PretrainedModelDto> findAll() {
         logger.info("查询所有模型");
-        List<PretrainedModel> models = modelRepository.findAll();
-        return models.stream()
-                .map(modelMapper::entityToDto)
-                .collect(Collectors.toList());
+        List<PretrainedModel> models = modelMapper.findAll();
+        return convertUtil.toDtoList(models);
     }
 
     @Override
     public List<PretrainedModelDto> findByPartition(String partition) {
         logger.info("查询分区的模型: {}", partition);
-        List<PretrainedModel> models = modelRepository.findAll();
-        return models.stream()
-                .filter(model -> partition.equals(model.getModelPartition()))
-                .map(modelMapper::entityToDto)
-                .collect(Collectors.toList());
+        List<PretrainedModel> models = modelMapper.findByPartition(partition);
+        return convertUtil.toDtoList(models);
     }
 
     @Override
@@ -134,13 +126,11 @@ public class PretrainedModelService implements IPretrainedModelService {
     public boolean deleteModel(Integer modelId) {
         logger.info("删除模型ID: {}", modelId);
 
-        Optional<PretrainedModel> modelOptional = modelRepository.findById(modelId);
-        if (modelOptional.isEmpty()) {
+        PretrainedModel model = modelMapper.findById(modelId);
+        if (model == null) {
             logger.warn("模型不存在: {}", modelId);
             return false;
         }
-
-        PretrainedModel model = modelOptional.get();
 
         // 删除文件
         try {
@@ -157,7 +147,7 @@ public class PretrainedModelService implements IPretrainedModelService {
         }
 
         // 删除数据库记录
-        modelRepository.deleteById(modelId);
+        modelMapper.delete(modelId);
         logger.info("数据库记录删除成功: {}", modelId);
 
         return true;
@@ -168,7 +158,7 @@ public class PretrainedModelService implements IPretrainedModelService {
     public boolean deleteByModelName(String modelName) {
         logger.info("根据名称删除模型: {}", modelName);
 
-        PretrainedModel model = modelRepository.findByModelName(modelName);
+        PretrainedModel model = modelMapper.findByModelName(modelName);
         if (model == null) {
             logger.warn("模型不存在: {}", modelName);
             return false;
@@ -182,27 +172,88 @@ public class PretrainedModelService implements IPretrainedModelService {
     public PretrainedModelDto updateModel(Integer modelId, PretrainedModelDto dto) {
         logger.info("更新模型ID: {}", modelId);
 
-        Optional<PretrainedModel> modelOptional = modelRepository.findById(modelId);
-        if (modelOptional.isEmpty()) {
+        PretrainedModel model = modelMapper.findById(modelId);
+        if (model == null) {
             throw new RuntimeException("模型不存在: " + modelId);
         }
 
-        PretrainedModel model = modelOptional.get();
-
         // 如果要更新模型名称，检查是否重复
         if (dto.getModelName() != null && !dto.getModelName().equals(model.getModelName())) {
-            PretrainedModel existingModel = modelRepository.findByModelName(dto.getModelName());
+            PretrainedModel existingModel = modelMapper.findByModelName(dto.getModelName());
             if (existingModel != null) {
                 throw new RuntimeException("模型名称已存在: " + dto.getModelName());
             }
         }
 
-        // 更新字段
-        modelMapper.updateEntityFromDto(model, dto);
+        // 更新实体字段
+        if (dto.getModelName() != null) {
+            model.setModelName(dto.getModelName());
+        }
+        if (dto.getModelPartition() != null) {
+            model.setModelPartition(dto.getModelPartition());
+        }
+        if (dto.getModelFilePath() != null) {
+            model.setModelFilePath(dto.getModelFilePath());
+        }
 
-        PretrainedModel updatedModel = modelRepository.save(model);
-        logger.info("模型更新成功: {}", updatedModel);
+        // 使用选择性更新
+        modelMapper.updateSelective(model);
+        logger.info("模型更新成功: {}", model);
 
-        return modelMapper.entityToDto(updatedModel);
+        // 重新查询获取最新数据
+        PretrainedModel updatedModel = modelMapper.findById(modelId);
+        return convertUtil.toDto(updatedModel);
+    }
+
+    @Override
+    public List<PretrainedModelDto> searchModels(String keyword, int limit) {
+        logger.info("搜索模型，关键词: {}, 限制: {}", keyword, limit);
+        List<PretrainedModel> models = modelMapper.searchModels(keyword, limit);
+        return convertUtil.toDtoList(models);
+    }
+
+    @Override
+    @Transactional
+    public boolean batchDeleteModels(List<Integer> modelIds) {
+        logger.info("批量删除模型，ID列表: {}", modelIds);
+
+        if (modelIds == null || modelIds.isEmpty()) {
+            logger.warn("模型ID列表为空");
+            return false;
+        }
+
+        // 先删除所有相关文件
+        for (Integer modelId : modelIds) {
+            PretrainedModel model = modelMapper.findById(modelId);
+            if (model != null) {
+                try {
+                    Path filePath = Paths.get(model.getModelFilePath());
+                    if (Files.exists(filePath)) {
+                        Files.delete(filePath);
+                        logger.info("文件删除成功: {}", filePath);
+                    }
+                } catch (IOException e) {
+                    logger.error("文件删除失败: {}", model.getModelFilePath(), e);
+                }
+            }
+        }
+
+        // 批量删除数据库记录
+        modelMapper.batchDelete(modelIds);
+        logger.info("批量删除完成");
+
+        return true;
+    }
+
+    @Override
+    public int countModels() {
+        logger.info("统计模型总数");
+        return modelMapper.count();
+    }
+
+    @Override
+    public int countByPartition(String partition) {
+        logger.info("统计分区模型数量: {}", partition);
+        return modelMapper.countByPartition(partition);
     }
 }

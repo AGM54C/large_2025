@@ -2,6 +2,8 @@ package com.example.large_2025.util;
 
 import com.example.large_2025.pojo.dto.PretrainedModelDto;
 import com.example.large_2025.pojo.PretrainedModel;
+import com.example.large_2025.pojo.User;
+import com.example.large_2025.pojo.dto.UserDto;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -76,5 +78,37 @@ public class ConvertUtil {
         }
 
         return modelList;
+    }
+
+    /**
+     * User实体转化为UserDto
+     */
+    public UserDto toDto(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        UserDto dto = new UserDto();
+        dto.setUserId(user.getUserId());
+        dto.setNickname(user.getNickname());
+        dto.setEmail(user.getEmail());
+        dto.setPassword(user.getPassword());
+
+        return dto;
+    }
+
+    /**
+     * UserDto转化为User实体
+     */
+    public User toEntity(UserDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        User user = new User();
+        user.setUserId(dto.getUserId());
+        user.setNickname(dto.getNickname());
+        user.setEmail(dto.getEmail());
+        user.setPassword(dto.getPassword());
+        return user;
     }
 }
