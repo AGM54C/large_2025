@@ -1,5 +1,6 @@
 package com.example.large_2025.pojo.dto;
 
+import lombok.Data;
 import org.springframework.http.HttpStatus;
 
 @Data
