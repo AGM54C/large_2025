@@ -85,7 +85,7 @@ public class PretrainedModelService implements IPretrainedModelService {
             modelMapper.add(model);
             logger.info("数据库记录保存成功，模型ID: {}", model.getModelId());
 
-            return convertUtil.toDto(model);
+            return convertUtil.PretrainedModeltoDto(model);
 
         } catch (IOException e) {
             logger.error("文件上传失败", e);
@@ -97,28 +97,28 @@ public class PretrainedModelService implements IPretrainedModelService {
     public PretrainedModelDto findById(Integer modelId) {
         logger.info("查找模型ID: {}", modelId);
         PretrainedModel model = modelMapper.findById(modelId);
-        return convertUtil.toDto(model);
+        return convertUtil.PretrainedModeltoDto(model);
     }
 
     @Override
     public PretrainedModelDto findByModelName(String modelName) {
         logger.info("查找模型名称: {}", modelName);
         PretrainedModel model = modelMapper.findByModelName(modelName);
-        return convertUtil.toDto(model);
+        return convertUtil.PretrainedModeltoDto(model);
     }
 
     @Override
     public List<PretrainedModelDto> findAll() {
         logger.info("查询所有模型");
         List<PretrainedModel> models = modelMapper.findAll();
-        return convertUtil.toDtoList(models);
+        return convertUtil.PretrainedModelListtoDtoList(models);
     }
 
     @Override
     public List<PretrainedModelDto> findByPartition(String partition) {
         logger.info("查询分区的模型: {}", partition);
         List<PretrainedModel> models = modelMapper.findByPartition(partition);
-        return convertUtil.toDtoList(models);
+        return convertUtil.PretrainedModelListtoDtoList(models);
     }
 
     @Override
@@ -202,14 +202,14 @@ public class PretrainedModelService implements IPretrainedModelService {
 
         // 重新查询获取最新数据
         PretrainedModel updatedModel = modelMapper.findById(modelId);
-        return convertUtil.toDto(updatedModel);
+        return convertUtil.PretrainedModeltoDto(updatedModel);
     }
 
     @Override
     public List<PretrainedModelDto> searchModels(String keyword, int limit) {
         logger.info("搜索模型，关键词: {}, 限制: {}", keyword, limit);
         List<PretrainedModel> models = modelMapper.searchModels(keyword, limit);
-        return convertUtil.toDtoList(models);
+        return convertUtil.PretrainedModelListtoDtoList(models);
     }
 
     @Override
