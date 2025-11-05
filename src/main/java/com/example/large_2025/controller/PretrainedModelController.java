@@ -48,6 +48,13 @@ public class PretrainedModelController {
                 response.put("message", "上传文件不能为空");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
+            //验证模型名称和分区
+            if (modelName == null || modelName.isEmpty() ||
+                modelPartition == null || modelPartition.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "模型名称和分区不能为空");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
 
             logger.info("收到上传请求 - 模型名称: {}, 分区: {}, 文件: {}, 大小: {} bytes",
                     modelName, modelPartition, file.getOriginalFilename(), file.getSize());

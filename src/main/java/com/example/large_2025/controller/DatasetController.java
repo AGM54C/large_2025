@@ -48,6 +48,12 @@ public class DatasetController {
                 response.put("message", "上传文件不能为空");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
+            //验证数据集名称和分类
+            if (datasetName == null || datasetName.trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "数据集名称不能为空");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
 
             logger.info("收到上传请求 - 数据集名称: {}, 分类: {}, 文件: {}, 大小: {} bytes",
                     datasetName, datasetCategory, file.getOriginalFilename(), file.getSize());
