@@ -31,12 +31,16 @@ public class PretrainedModelController {
      *
      * @param modelName 模型名称
      * @param modelPartition 模型分区
+     * @param partitionUsage 模块用途
+     * @param usageDescription 作用描述
      * @param file 上传的文件
      */
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Map<String, Object>> uploadModel(
             @RequestParam("modelName") String modelName,
             @RequestParam("modelPartition") String modelPartition,
+            @RequestParam("partitionUsage") String partitionUsage,
+            @RequestParam("usageDescription") String usageDescription,
             @RequestParam("file") MultipartFile file) {
 
         Map<String, Object> response = new HashMap<>();
@@ -48,18 +52,22 @@ public class PretrainedModelController {
                 response.put("message", "上传文件不能为空");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-            //验证模型名称和分区
+
+            // 验证模型名称和分区
             if (modelName == null || modelName.isEmpty() ||
-                modelPartition == null || modelPartition.isEmpty()) {
+                    modelPartition == null || modelPartition.isEmpty()) {
                 response.put("success", false);
                 response.put("message", "模型名称和分区不能为空");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
-            logger.info("收到上传请求 - 模型名称: {}, 分区: {}, 文件: {}, 大小: {} bytes",
-                    modelName, modelPartition, file.getOriginalFilename(), file.getSize());
+            logger.info("收到上传请求 - 模型名称: {}, 分区: {}, 模块: {}, 作用: {}, 文件: {}, 大小: {} bytes",
+                    modelName, modelPartition, partitionUsage, usageDescription,
+                    file.getOriginalFilename(), file.getSize());
 
-            PretrainedModelDto dto = modelService.uploadModel(modelName, modelPartition, file);
+            // 调用service方法，传入所有参数
+            PretrainedModelDto dto = modelService.uploadModel(modelName, modelPartition,
+                    partitionUsage, usageDescription, file);
 
             response.put("success", true);
             response.put("message", "模型上传成功");
@@ -175,6 +183,68 @@ public class PretrainedModelController {
 
         } catch (Exception e) {
             logger.error("根据分区查询模型失败", e);
+            response.put("success", false);
+            response.put("message", "查询失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 根据分区和模块查询模型
+     * GET /api/models/partition/{partition}/usage/{usage}
+     * 这个端点对应service中的findByUsage方法
+     */
+    @GetMapping("/partition/{partition}/usage/{usage}")
+    public ResponseEntity<Map<String, Object>> getModelsByUsage(
+            @PathVariable("partition") String partition,
+            @PathVariable("usage") String usage) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<PretrainedModelDto> dtoList = modelService.findByUsage(partition, usage);
+
+            response.put("success", true);
+            response.put("data", dtoList);
+            response.put("count", dtoList.size());
+            response.put("partition", partition);
+            response.put("usage", usage);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("根据分区和模块查询模型失败", e);
+            response.put("success", false);
+            response.put("message", "查询失败: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
+     * 根据分区、模块和描述查询模型
+     * GET /api/models/partition/{partition}/usage/{usage}/description/{description}
+     * 这个端点对应service中的findByDescription方法
+     */
+    @GetMapping("/partition/{partition}/usage/{usage}/description/{description}")
+    public ResponseEntity<Map<String, Object>> getModelsByDescription(
+            @PathVariable("partition") String partition,
+            @PathVariable("usage") String usage,
+            @PathVariable("description") String description) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<PretrainedModelDto> dtoList = modelService.findByDescription(partition, usage, description);
+
+            response.put("success", true);
+            response.put("data", dtoList);
+            response.put("count", dtoList.size());
+            response.put("partition", partition);
+            response.put("usage", usage);
+            response.put("description", description);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("根据分区、模块和描述查询模型失败", e);
             response.put("success", false);
             response.put("message", "查询失败: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);

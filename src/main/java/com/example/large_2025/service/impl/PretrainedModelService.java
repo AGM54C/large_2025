@@ -37,8 +37,8 @@ public class PretrainedModelService implements IPretrainedModelService {
 
     @Override
     @Transactional
-    public PretrainedModelDto uploadModel(String modelName, String modelPartition, MultipartFile file) {
-        logger.info("开始上传模型: {}, 分区: {}, 文件名: {}", modelName, modelPartition, file.getOriginalFilename());
+    public PretrainedModelDto uploadModel(String modelName, String modelPartition,String partititionUsage,String usageDescription,MultipartFile file) {
+        logger.info("开始上传模型: {}, 分区: {}, 模块:{},作用:{},文件名: {}", modelName, modelPartition,partititionUsage,usageDescription, file.getOriginalFilename());
 
         // 检查模型名称是否已存在
         PretrainedModel existingModel = modelMapper.findByModelName(modelName);
@@ -118,6 +118,20 @@ public class PretrainedModelService implements IPretrainedModelService {
     public List<PretrainedModelDto> findByPartition(String partition) {
         logger.info("查询分区的模型: {}", partition);
         List<PretrainedModel> models = modelMapper.findByPartition(partition);
+        return convertUtil.PretrainedModelListtoDtoList(models);
+    }
+
+    @Override
+    public List<PretrainedModelDto> findByUsage(String partition,String usage) {
+        logger.info("查询分区模块的模型: {}",usage);
+        List<PretrainedModel> models = modelMapper.findByUsage(partition,usage);
+        return convertUtil.PretrainedModelListtoDtoList(models);
+    }
+
+    @Override
+    public List<PretrainedModelDto> findByDescription(String partition,String usage,String description) {
+        logger.info("查询分区模块作用的模型: {}",description);
+        List<PretrainedModel> models = modelMapper.findByDescription(partition,usage,description);
         return convertUtil.PretrainedModelListtoDtoList(models);
     }
 

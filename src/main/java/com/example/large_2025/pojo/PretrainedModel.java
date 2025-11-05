@@ -17,6 +17,12 @@ public class PretrainedModel {
     @Column(name = "model_partition", nullable = false, length = 50)
     private String modelPartition;
 
+    @Column(name = "partitition_usage", nullable = true, length = 50)
+    private String partititionUsage;
+
+    @Column(name = "usage_description", nullable = true, length = 50)
+    private String usageDescription;
+
     @Column(name = "model_file_path", nullable = false, length = 255)
     private String modelFilePath;
 
@@ -32,6 +38,8 @@ public class PretrainedModel {
         this.modelName = modelName;
         this.modelPartition = modelPartition;
         this.modelFilePath = modelFilePath;
+        this.partititionUsage = partititionUsage;
+        this.usageDescription = usageDescription;
     }
 
     @PrePersist
@@ -63,6 +71,23 @@ public class PretrainedModel {
     public void setModelPartition(String modelPartition) {
         this.modelPartition = modelPartition;
     }
+
+    public String getPartititionUsage() {
+        return partititionUsage;
+    }
+
+    public void setPartititionUsage(String partititionUsage) {
+        this.partititionUsage = partititionUsage;
+    }
+
+    public String getUsageDescription() {
+        return usageDescription;
+    }
+
+    public void setUsageDescription(String usageDescription) {
+        this.usageDescription = usageDescription;
+    }
+
     public String getModelFilePath() {
         return modelFilePath;
     }
@@ -82,6 +107,8 @@ public class PretrainedModel {
                 "modelId=" + modelId +
                 ", modelName='" + modelName + '\'' +
                 ", modelPartition='" + modelPartition + '\'' +
+                ", partitionUsage='" + partititionUsage + '\'' +
+                ", UsageDescription='" + usageDescription + '\'' +
                 ", modelFilePath='" + modelFilePath + '\'' +
                 ", updateTimestamp=" + updateTimestamp +
                 '}';

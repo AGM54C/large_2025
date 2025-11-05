@@ -14,7 +14,7 @@ public interface IPretrainedModelService {
      * @param file 上传的文件
      * @return 保存后的模型信息
      */
-    PretrainedModelDto uploadModel(String modelName, String modelPartition, MultipartFile file);
+    PretrainedModelDto uploadModel(String modelName, String modelPartition, String partititionUsage,String usageDescription,MultipartFile file);
 
     /**
      * 根据ID查找模型
@@ -42,6 +42,23 @@ public interface IPretrainedModelService {
      * @return 模型列表
      */
     List<PretrainedModelDto> findByPartition(String partition);
+
+    /**
+     * 根据分区与模块查询模型列表
+     * @param partition
+     * @param usage
+     * @return 模型列表
+     */
+    List<PretrainedModelDto> findByUsage(String partition,String usage);
+
+    /**
+     * 根据分区与模块与作用查询模型列表
+     * @param partition
+     * @param usage
+     * @param description
+     * @return 模型列表
+     */
+    List<PretrainedModelDto> findByDescription(String partition,String usage,String description);
 
     /**
      * 删除模型（包括文件和数据库记录）

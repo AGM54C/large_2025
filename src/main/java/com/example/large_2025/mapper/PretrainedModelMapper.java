@@ -42,6 +42,23 @@ public interface PretrainedModelMapper {
     List<PretrainedModel> findByPartition(String modelPartition);
 
     /**
+     * 根据分区和模块查询模型列表
+     * 这个方法对应service中的findByUsage方法
+     */
+    @Select("SELECT * FROM tab_pretrained_model WHERE model_partition = #{partition} AND partition_usage = #{usage}")
+    List<PretrainedModel> findByUsage(@Param("partition") String partition, @Param("usage") String usage);
+
+    /**
+     * 根据分区、模块和作用描述查询模型列表
+     * 这个方法对应service中的findByDescription方法
+     */
+    @Select("SELECT * FROM tab_pretrained_model WHERE model_partition = #{partition} " +
+            "AND partition_usage = #{usage} AND usage_description = #{description}")
+    List<PretrainedModel> findByDescription(@Param("partition") String partition,
+                                            @Param("usage") String usage,
+                                            @Param("description") String description);
+
+    /**
      * 删除预训练模型
      */
     @Delete("DELETE FROM tab_pretrained_model WHERE model_id = #{modelId}")

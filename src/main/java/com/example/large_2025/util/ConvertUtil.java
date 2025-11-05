@@ -28,6 +28,8 @@ public class ConvertUtil {
         dto.setModelId(model.getModelId());
         dto.setModelName(model.getModelName());
         dto.setModelPartition(model.getModelPartition());
+        dto.setPartititionUsage(model.getPartititionUsage());
+        dto.setUsageDescription(model.getUsageDescription());
         dto.setModelFilePath(model.getModelFilePath());
         dto.setUpdateTimestamp(model.getUpdateTimestamp());
 
@@ -46,6 +48,8 @@ public class ConvertUtil {
         model.setModelId(dto.getModelId());
         model.setModelName(dto.getModelName());
         model.setModelPartition(dto.getModelPartition());
+        model.setPartititionUsage(dto.getPartititionUsage());
+        model.setUsageDescription(dto.getUsageDescription());
         model.setModelFilePath(dto.getModelFilePath());
         model.setUpdateTimestamp(dto.getUpdateTimestamp());
 
